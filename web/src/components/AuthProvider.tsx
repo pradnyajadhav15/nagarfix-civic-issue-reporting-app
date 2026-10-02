@@ -10,6 +10,7 @@ export type User = {
   email: string;
   role: Role;
   wardCode: string | null;
+  demo?: boolean;
 };
 type AuthResponse = { token: string; user: User };
 
@@ -18,6 +19,7 @@ type AuthState = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (fullName: string, email: string, password: string) => Promise<void>;
+  loginDemo: (role: Role) => Promise<User>;
   logout: () => void;
 };
 
@@ -64,14 +66,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(res.user);
   }, []);
 
+  const loginDemo = useCallback(async (role: Role) => {
+    const res = await api<AuthResponse>("/api/auth/demo", {
+      method: "POST",
+      body: JSON.stringify({ role }),
+    });
+    setToken(res.token);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout }),
-    [user, loading, login, register, logout],
+    () => ({ user, loading, login, register, loginDemo, logout }),
+    [user, loading, login, register, loginDemo, logout],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

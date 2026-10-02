@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import dev.nagarfix.api.auth.UserService;
 import dev.nagarfix.api.common.ApiException;
 import jakarta.validation.Valid;
 
@@ -24,29 +25,36 @@ import jakarta.validation.Valid;
 public class IssueController {
 
     private final IssueService issues;
+    private final WorkflowService workflow;
+    private final UserService users;
 
-    public IssueController(IssueService issues) {
+    public IssueController(IssueService issues, WorkflowService workflow, UserService users) {
         this.issues = issues;
+        this.workflow = workflow;
+        this.users = users;
     }
 
     /** Report a new issue (needs login). The ward is assigned automatically. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public IssueView create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateIssueRequest req) {
-        return issues.create(Long.parseLong(jwt.getSubject()), req);
+        return issues.create(users.actor(jwt), req);
     }
 
     /**
      * Public list for the map. Optional filters:
-     * status=SUBMITTED,ASSIGNED  category=POTHOLE  ward=Z05  bbox=minLng,minLat,maxLng,maxLat  limit=500
+     * status=SUBMITTED,ASSIGNED  category=POTHOLE  ward=Z05  demo=true|false
+     * bbox=minLng,minLat,maxLng,maxLat  limit=500
      */
     @GetMapping
     public List<IssueView> list(@RequestParam(required = false) String status,
                                 @RequestParam(required = false) String category,
                                 @RequestParam(required = false) String ward,
+                                @RequestParam(required = false) Boolean demo,
                                 @RequestParam(required = false) String bbox,
                                 @RequestParam(defaultValue = "500") int limit) {
-        return issues.search(codes(status), codes(category), ward, parseBbox(bbox), Math.max(1, Math.min(limit, 1000)));
+        return issues.search(codes(status), codes(category), ward, demo, parseBbox(bbox),
+                Math.max(1, Math.min(limit, 1000)));
     }
 
     /** My own reports, newest first (needs login). */
@@ -59,6 +67,25 @@ public class IssueController {
     @GetMapping("/{id}")
     public IssueView one(@PathVariable long id) {
         return issues.get(id);
+    }
+
+    /** Everything that happened to a report, oldest first - public. */
+    @GetMapping("/{id}/history")
+    public List<IssueEventView> history(@PathVariable long id) {
+        return issues.history(id);
+    }
+
+    /** What I am allowed to do with this report right now (needs login). */
+    @GetMapping("/{id}/actions")
+    public List<IssueAction> actions(@AuthenticationPrincipal Jwt jwt, @PathVariable long id) {
+        return workflow.allowedActions(users.actor(jwt), id);
+    }
+
+    /** Take, start, resolve, reject, mark duplicate (officers) or confirm / reopen (the reporter). */
+    @PostMapping("/{id}/actions")
+    public IssueView act(@AuthenticationPrincipal Jwt jwt, @PathVariable long id,
+                         @Valid @RequestBody IssueActionRequest req) {
+        return workflow.apply(users.actor(jwt), id, req);
     }
 
     /** "submitted, in_progress" -> [SUBMITTED, IN_PROGRESS]; anything odd is ignored. */

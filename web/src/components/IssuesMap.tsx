@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CircleMarker, GeoJSON, MapContainer, Popup, TileLayer } from "react-leaflet";
 import type { FeatureCollection } from "geojson";
 import "leaflet/dist/leaflet.css";
+import { DemoBadge } from "@/components/Badges";
 import { categoryLabel, cloudinaryUrl, formatDate, STATUS, STATUS_COLOR, type Issue } from "@/lib/issues";
 
 export type IssuesMapProps = {
@@ -45,7 +46,7 @@ export default function IssuesMap({ issues, zones }: IssuesMapProps) {
                   className="h-28 w-full rounded object-cover"
                 />
                 <div className="font-semibold">
-                  {cat.en} <span className="font-normal text-slate-500">{cat.mr}</span>
+                  {cat.en} <span className="font-normal text-slate-500">{cat.mr}</span> {i.demo && <DemoBadge />}
                 </div>
                 <div className="text-xs">
                   {STATUS[i.status]?.label ?? i.status}

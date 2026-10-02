@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { DemoBadge } from "@/components/Badges";
 import StatusBadge from "@/components/StatusBadge";
 import { api } from "@/lib/api";
 import { categoryLabel, cloudinaryUrl, formatDate, type Issue } from "@/lib/issues";
@@ -80,11 +81,17 @@ export default function MyReportsPage() {
                     <span className="font-semibold">
                       {cat.en} <span className="font-normal text-slate-500">{cat.mr}</span>
                     </span>
-                    <StatusBadge status={i.status} />
+                    <span className="flex items-center gap-1.5">
+                      {i.demo && <DemoBadge />}
+                      <StatusBadge status={i.status} />
+                    </span>
                   </div>
                   <p className="text-sm text-slate-600">
-                    {i.wardName ?? "Unknown zone"} - {formatDate(i.createdAt)}
+                    #{i.id} - {i.wardName ?? "Unknown zone"} - {formatDate(i.createdAt)}
                   </p>
+                  {i.status === "RESOLVED" && (
+                    <p className="text-sm font-semibold text-emerald-700">Marked fixed - please check and confirm</p>
+                  )}
                   {i.description && <p className="truncate text-sm text-slate-500">{i.description}</p>}
                 </div>
               </Link>

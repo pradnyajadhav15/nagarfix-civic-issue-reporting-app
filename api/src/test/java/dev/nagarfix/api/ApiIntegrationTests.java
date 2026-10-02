@@ -3,64 +3,19 @@ package dev.nagarfix.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import com.jayway.jsonpath.JsonPath;
-
-/**
- * End-to-end checks over real HTTP, against a real Postgres + PostGIS database.
- *
- * These tests create users and reports, so they only run when INTEGRATION_TESTS=true:
- * in GitHub Actions, on a throwaway database. They never touch the live Neon database.
- */
-@SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {
-                "app.admin.email=" + ApiIntegrationTests.ADMIN_EMAIL,
-                "app.admin.password=" + ApiIntegrationTests.ADMIN_PASSWORD,
-                "app.cloudinary.url=cloudinary://test-key:" + ApiIntegrationTests.CLOUD_SECRET + "@test-cloud"
-        })
+/** Zones, accounts, reporting, the public list, uploads and CORS - over real HTTP (see IntegrationTestBase). */
 @EnabledIfEnvironmentVariable(named = "INTEGRATION_TESTS", matches = "true")
-class ApiIntegrationTests {
-
-    static final String ADMIN_EMAIL = "admin@example.com";
-    static final String ADMIN_PASSWORD = "test-admin-password";
-    static final String CLOUD_SECRET = "test-secret";
-    static final String PHOTO = "https://res.cloudinary.com/test-cloud/image/upload/v1/nagarfix/issues/test.jpg";
-    static final String WEBSITE = "https://nagarfix-civic-issue-reporting-app.vercel.app";
-
-    // Solapur city centre (inside the zones) and Pune (outside them)
-    static final double SOLAPUR_LAT = 17.6599;
-    static final double SOLAPUR_LNG = 75.9064;
-    static final double PUNE_LAT = 18.5204;
-    static final double PUNE_LNG = 73.8567;
-    static final String SOLAPUR_BOX = "75.80,17.55,76.02,17.77";
-    static final String PUNE_BOX = "73.70,18.40,74.00,18.65";
-
-    private final HttpClient http = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).build();
-
-    @Value("${local.server.port}")
-    private int port;
-
-    // ------------------------------------------------------------------ tests
+class ApiIntegrationTests extends IntegrationTestBase {
 
     @Test
-    void healthDatabaseAndZones() throws Exception {
+    void healthDatabaseAndZones() {
         Reply health = get("/actuator/health");
         assertThat(health.status()).isEqualTo(200);
         assertThat(health.<String>json("$.status")).isEqualTo("UP");
@@ -76,7 +31,7 @@ class ApiIntegrationTests {
     }
 
     @Test
-    void locateFindsAZoneOnlyInsideSolapur() throws Exception {
+    void locateFindsAZoneOnlyInsideSolapur() {
         Reply inside = get("/api/wards/locate?lat=" + SOLAPUR_LAT + "&lng=" + SOLAPUR_LNG);
         assertThat(inside.status()).as("body: %s", inside.body()).isEqualTo(200);
         assertThat(inside.<String>json("$.code")).matches("Z\\d{2}");
@@ -89,7 +44,7 @@ class ApiIntegrationTests {
     }
 
     @Test
-    void signUpLogInAndWhoAmI() throws Exception {
+    void signUpLogInAndWhoAmI() {
         String email = "New.Citizen-" + UUID.randomUUID() + "@Example.com";
         String signUp = """
                 {"fullName": "New Citizen", "email": "%s", "password": "test-password-1"}
@@ -100,15 +55,11 @@ class ApiIntegrationTests {
         assertThat(created.<String>json("$.token")).isNotBlank();
         assertThat(created.<String>json("$.user.role")).isEqualTo("CITIZEN");
         assertThat(created.<String>json("$.user.email")).isEqualTo(email.toLowerCase(Locale.ROOT));
+        assertThat(created.<Boolean>json("$.user.demo")).isFalse();
 
         assertThat(post("/api/auth/register", signUp, null).status()).isEqualTo(409);
 
-        Reply login = post("/api/auth/login", """
-                {"email": "%s", "password": "test-password-1"}
-                """.formatted(email), null);
-        assertThat(login.status()).as("body: %s", login.body()).isEqualTo(200);
-
-        Reply me = get("/api/me", login.json("$.token"));
+        Reply me = get("/api/me", login(email, "test-password-1"));
         assertThat(me.status()).isEqualTo(200);
         assertThat(me.<String>json("$.fullName")).isEqualTo("New Citizen");
 
@@ -125,17 +76,19 @@ class ApiIntegrationTests {
     }
 
     @Test
-    void privatePagesNeedALogin() throws Exception {
+    void privatePagesNeedALogin() {
         assertThat(get("/api/me").status()).isEqualTo(401);
         assertThat(get("/api/me", "not-a-real-token").status()).isEqualTo(401);
         assertThat(get("/api/issues/mine").status()).isEqualTo(401);
         assertThat(post("/api/issues", issueJson("POTHOLE", SOLAPUR_LAT, SOLAPUR_LNG, PHOTO), null).status())
                 .isEqualTo(401);
         assertThat(post("/api/uploads/signature", null, null).status()).isEqualTo(401);
+        assertThat(get("/api/notifications").status()).isEqualTo(401);
+        assertThat(get("/api/issues/1/actions").status()).isEqualTo(401);
     }
 
     @Test
-    void onlyAdminsManageUsers() throws Exception {
+    void onlyAdminsManageUsers() {
         assertThat(get("/api/admin/users", newCitizen()).status()).isEqualTo(403);
 
         String admin = adminToken();
@@ -151,7 +104,7 @@ class ApiIntegrationTests {
     }
 
     @Test
-    void aReportIsRoutedToItsZoneAndShowsUpEverywhere() throws Exception {
+    void aReportIsRoutedToItsZoneAndShowsUpEverywhere() {
         String token = newCitizen();
         Reply created = post("/api/issues", issueJson("POTHOLE", SOLAPUR_LAT, SOLAPUR_LNG, PHOTO), token);
         assertThat(created.status()).as("body: %s", created.body()).isEqualTo(201);
@@ -160,6 +113,7 @@ class ApiIntegrationTests {
         String zone = created.json("$.wardCode");
         assertThat(zone).matches("Z\\d{2}");
         assertThat(created.<String>json("$.status")).isEqualTo("SUBMITTED");
+        assertThat(created.<Boolean>json("$.demo")).isFalse();
         assertThat(created.<Number>json("$.lat").doubleValue()).isCloseTo(SOLAPUR_LAT, within(1e-6));
         assertThat(created.<Number>json("$.lng").doubleValue()).isCloseTo(SOLAPUR_LNG, within(1e-6));
 
@@ -175,12 +129,14 @@ class ApiIntegrationTests {
         assertThat(ids(get("/api/issues?bbox=" + PUNE_BOX))).doesNotContain(id);
         assertThat(ids(get("/api/issues?category=GARBAGE"))).doesNotContain(id);
         assertThat(ids(get("/api/issues?status=RESOLVED"))).doesNotContain(id);
+        assertThat(ids(get("/api/issues?demo=false"))).contains(id);
+        assertThat(ids(get("/api/issues?demo=true"))).doesNotContain(id);
 
         assertThat(get("/api/issues/999999999").status()).isEqualTo(404);
     }
 
     @Test
-    void badReportsAreRejected() throws Exception {
+    void badReportsAreRejected() {
         String token = newCitizen();
 
         Reply otherPhoto = post("/api/issues",
@@ -206,7 +162,7 @@ class ApiIntegrationTests {
     }
 
     @Test
-    void photoUploadsAreSignedForLoggedInUsers() throws Exception {
+    void photoUploadsAreSignedForLoggedInUsers() {
         Reply signed = post("/api/uploads/signature", null, newCitizen());
         assertThat(signed.status()).as("body: %s", signed.body()).isEqualTo(200);
         assertThat(signed.<String>json("$.uploadUrl")).isEqualTo("https://api.cloudinary.com/v1_1/test-cloud/image/upload");
@@ -220,7 +176,7 @@ class ApiIntegrationTests {
     }
 
     @Test
-    void theWebsiteMayCallTheApiButOtherSitesMayNot() throws Exception {
+    void theWebsiteMayCallTheApiButOtherSitesMayNot() {
         Reply website = preflight(WEBSITE);
         assertThat(website.status()).isEqualTo(200);
         assertThat(website.header("Access-Control-Allow-Origin")).isEqualTo(WEBSITE);
@@ -232,101 +188,5 @@ class ApiIntegrationTests {
         Reply other = preflight("https://other-site.example.com");
         assertThat(other.status()).isEqualTo(403);
         assertThat(other.header("Access-Control-Allow-Origin")).isNull();
-    }
-
-    // ------------------------------------------------------------------ helpers
-
-    /** One HTTP response. json("$.path") reads a value from the JSON body. */
-    record Reply(int status, String body, HttpHeaders headers) {
-
-        <T> T json(String path) {
-            return JsonPath.read(body, path);
-        }
-
-        String header(String name) {
-            return headers.firstValue(name).orElse(null);
-        }
-    }
-
-    private Reply send(HttpRequest.Builder request) throws Exception {
-        HttpResponse<String> response = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
-        return new Reply(response.statusCode(), response.body(), response.headers());
-    }
-
-    private HttpRequest.Builder request(String path, String token) {
-        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path));
-        if (token != null) {
-            request.header("Authorization", "Bearer " + token);
-        }
-        return request;
-    }
-
-    private Reply get(String path) throws Exception {
-        return get(path, null);
-    }
-
-    private Reply get(String path, String token) throws Exception {
-        return send(request(path, token).GET());
-    }
-
-    private Reply post(String path, String json, String token) throws Exception {
-        HttpRequest.Builder request = request(path, token);
-        if (json == null) {
-            return send(request.POST(HttpRequest.BodyPublishers.noBody()));
-        }
-        return send(request.header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json)));
-    }
-
-    /** What a browser asks before calling the API from another website (CORS preflight). */
-    private Reply preflight(String origin) throws Exception {
-        return send(request("/api/issues", null)
-                .method("OPTIONS", HttpRequest.BodyPublishers.noBody())
-                .header("Origin", origin)
-                .header("Access-Control-Request-Method", "POST")
-                .header("Access-Control-Request-Headers", "authorization,content-type"));
-    }
-
-    /** Signs up a new citizen and returns their login token. */
-    private String newCitizen() throws Exception {
-        Reply created = post("/api/auth/register", """
-                {"fullName": "Test Citizen", "email": "citizen-%s@example.com", "password": "test-password-1"}
-                """.formatted(UUID.randomUUID()), null);
-        assertThat(created.status()).as("body: %s", created.body()).isEqualTo(201);
-        return created.json("$.token");
-    }
-
-    /** Logs in as the admin that AdminBootstrap creates at startup. */
-    private String adminToken() throws Exception {
-        Reply login = post("/api/auth/login", """
-                {"email": "%s", "password": "%s"}
-                """.formatted(ADMIN_EMAIL, ADMIN_PASSWORD), null);
-        assertThat(login.status()).as("body: %s", login.body()).isEqualTo(200);
-        return login.json("$.token");
-    }
-
-    private static String userJson(String role, String wardCode) {
-        return """
-                {"fullName": "Zone Officer", "email": "officer-%s@example.com", "password": "officer-password",
-                 "role": "%s", "wardCode": %s}
-                """.formatted(UUID.randomUUID(), role, wardCode == null ? "null" : "\"" + wardCode + "\"");
-    }
-
-    private static String issueJson(String category, double lat, double lng, String photoUrl) {
-        return """
-                {"category": "%s", "description": "Test report", "lat": %s, "lng": %s,
-                 "address": "Test address", "photoUrl": "%s"}
-                """.formatted(category, lat, lng, photoUrl);
-    }
-
-    private static List<Long> ids(Reply list) {
-        assertThat(list.status()).as("body: %s", list.body()).isEqualTo(200);
-        List<Object> raw = list.json("$[*].id");
-        return raw.stream().map(id -> ((Number) id).longValue()).toList();
-    }
-
-    private static String sha1Hex(String text) throws Exception {
-        byte[] hash = MessageDigest.getInstance("SHA-1").digest(text.getBytes(StandardCharsets.UTF_8));
-        return HexFormat.of().formatHex(hash);
     }
 }

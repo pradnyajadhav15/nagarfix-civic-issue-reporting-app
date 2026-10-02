@@ -19,6 +19,7 @@ export default function MapPage() {
   const [error, setError] = useState("");
   const [category, setCategory] = useState<string>("ALL");
   const [show, setShow] = useState<Show>("all");
+  const [withDemo, setWithDemo] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -41,20 +42,22 @@ export default function MapPage() {
     };
   }, []);
 
+  const pool = useMemo(() => (issues ?? []).filter((i) => withDemo || !i.demo), [issues, withDemo]);
   const visible = useMemo(
     () =>
-      (issues ?? []).filter(
+      pool.filter(
         (i) =>
           (category === "ALL" || i.category === category) &&
           (show === "all" ||
             (show === "open" ? OPEN_STATUSES.includes(i.status) : FIXED_STATUSES.includes(i.status))),
       ),
-    [issues, category, show],
+    [pool, category, show],
   );
 
-  const total = issues?.length ?? 0;
-  const open = issues?.filter((i) => OPEN_STATUSES.includes(i.status)).length ?? 0;
-  const fixed = issues?.filter((i) => FIXED_STATUSES.includes(i.status)).length ?? 0;
+  const total = pool.length;
+  const open = pool.filter((i) => OPEN_STATUSES.includes(i.status)).length;
+  const fixed = pool.filter((i) => FIXED_STATUSES.includes(i.status)).length;
+  const demoCount = (issues ?? []).filter((i) => i.demo).length;
 
   return (
     <main className="mx-auto max-w-5xl space-y-4 px-6 py-8">
@@ -94,6 +97,12 @@ export default function MapPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
       {!issues && !error && (
         <p className="text-sm text-slate-600">Loading reports (the free server can take up to a minute to wake)...</p>
+      )}
+      {demoCount > 0 && (
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input type="checkbox" checked={withDemo} onChange={(e) => setWithDemo(e.target.checked)} />
+          Include {demoCount} demo reports (made-up data, marked DEMO)
+        </label>
       )}
       {issues && (
         <p className="text-sm text-slate-600">

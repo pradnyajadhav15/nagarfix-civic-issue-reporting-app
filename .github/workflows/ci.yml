@@ -18,7 +18,7 @@ permissions:
 jobs:
   api:
     name: API (Spring Boot + PostGIS)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       postgis:
@@ -60,9 +60,26 @@ jobs:
       - name: Build and test
         run: ./mvnw -B -ntp verify
 
+      - name: Test summary
+        if: always()
+        shell: python3 {0}
+        run: |
+          # One line per test class (shown on the run's page), plus the reason for each failed test
+          import glob, xml.etree.ElementTree as ET
+          for path in sorted(glob.glob("target/surefire-reports/TEST-*.xml")):
+              suite = ET.parse(path).getroot()
+              name = suite.get("name").rsplit(".", 1)[-1]
+              tests, skipped = int(suite.get("tests")), int(suite.get("skipped"))
+              failed = int(suite.get("failures")) + int(suite.get("errors"))
+              print(f"::notice title={name}::{tests} tests, {failed} failed, {skipped} skipped")
+              for case in suite.iter("testcase"):
+                  for problem in list(case.iter("failure")) + list(case.iter("error")):
+                      message = (problem.get("message") or problem.text or "").replace("\n", " ")[:400]
+                      print(f"::error title={name}.{case.get('name')}::{message}")
+
   web:
     name: Web (Next.js)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
@@ -89,7 +106,7 @@ jobs:
 
   ml:
     name: ML service (FastAPI)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:

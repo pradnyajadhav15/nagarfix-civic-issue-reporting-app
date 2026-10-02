@@ -3,6 +3,8 @@ package dev.nagarfix.api.auth;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,7 +44,8 @@ public class AdminUserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UserView create(@Valid @RequestBody CreateUserRequest req) {
+    public UserView create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CreateUserRequest req) {
+        users.actor(jwt).requireNotDemo();
         return UserView.of(users.create(req.fullName(), req.email(), req.password(), req.role(), req.wardCode()));
     }
 }
