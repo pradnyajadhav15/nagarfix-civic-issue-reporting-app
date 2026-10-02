@@ -26,11 +26,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/hello", "/api/db", "/api/wards", "/api/wards/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/hello", "/api/db", "/api/wards", "/api/wards/**", "/api/rules").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/demo").permitAll()
                         // "mine" needs login - must come before the public issue rule below
                         .requestMatchers(HttpMethod.GET, "/api/issues/mine").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/issues", "/api/issues/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/issues", "/api/issues/*", "/api/issues/*/history").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));

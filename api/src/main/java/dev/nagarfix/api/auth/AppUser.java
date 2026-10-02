@@ -34,6 +34,10 @@ public class AppUser {
     @Column(name = "ward_code", length = 20)
     private String wardCode;
 
+    /** Demo accounts sign in with the "Try a demo" buttons and can only change demo data. */
+    @Column(name = "is_demo", nullable = false)
+    private boolean demo;
+
     protected AppUser() {
     }
 
@@ -51,4 +55,5 @@ public class AppUser {
     public String getPasswordHash() { return passwordHash; }
     public Role getRole() { return role; }
     public String getWardCode() { return wardCode; }
+    public boolean isDemo() { return demo; }
 }

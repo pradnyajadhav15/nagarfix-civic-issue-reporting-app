@@ -60,6 +60,15 @@ jobs:
       - name: Build and test
         run: ./mvnw -B -ntp verify
 
+      # TEMP (review branch only): keep the built app so it can be tried end to end
+      - name: Keep the built app
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: api-jar
+          path: api/target/api-0.0.1-SNAPSHOT.jar
+          retention-days: 1
+
   web:
     name: Web (Next.js)
     runs-on: ubuntu-latest
