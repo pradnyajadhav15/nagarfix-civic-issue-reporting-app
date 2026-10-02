@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Illustration of uncollected garbage (demo photo)">
+<rect width="800" height="500" fill="#e2e8f0"/>
+<rect y="380" width="800" height="120" fill="#94a3b8"/>
+<rect x="300" y="210" width="200" height="190" rx="10" fill="#15803d"/>
+<rect x="290" y="196" width="220" height="26" rx="8" fill="#166534"/>
+<g fill="#334155"><circle cx="330" cy="190" r="42"/><circle cx="400" cy="172" r="48"/><circle cx="470" cy="192" r="40"/></g>
+<g fill="#1e293b"><ellipse cx="210" cy="405" rx="58" ry="34"/><ellipse cx="590" cy="410" rx="64" ry="32"/><ellipse cx="660" cy="430" rx="38" ry="22"/></g>
+<g fill="#f59e0b"><rect x="130" y="440" width="34" height="12" rx="3" transform="rotate(-18 147 446)"/><rect x="520" y="452" width="30" height="10" rx="3" transform="rotate(12 535 457)"/></g>
+<g fill="#ef4444"><circle cx="250" cy="455" r="8"/><circle cx="720" cy="462" r="7"/></g>
+<g><rect x="24" y="24" width="168" height="40" rx="20" fill="#0f172a" opacity="0.78"/><text x="108" y="50" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="2">DEMO PHOTO</text></g>
+</svg>

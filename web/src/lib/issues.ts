@@ -15,7 +15,32 @@ export type Issue = {
   photoUrl: string;
   status: string;
   createdAt: string;
+  updatedAt: string;
+  department: string | null;
+  slaDays: number | null;
+  dueAt: string | null;
+  overdue: boolean;
+  resolutionPhotoUrl: string | null;
+  resolutionNote: string | null;
+  statusReason: string | null;
+  duplicateOfId: number | null;
+  resolvedAt: string | null;
+  closedAt: string | null;
+  demo: boolean;
 };
+
+/** One entry in a report's history (roles only, never names). */
+export type IssueEvent = {
+  fromStatus: string | null;
+  toStatus: string;
+  action: string;
+  actorRole: string;
+  note: string | null;
+  photoUrl: string | null;
+  createdAt: string;
+};
+
+export type IssueAction = "ASSIGN" | "START" | "RESOLVE" | "REJECT" | "DUPLICATE" | "CONFIRM" | "REOPEN";
 
 // Marathi labels are written as unicode escapes so this file stays plain ASCII.
 export const CATEGORIES = [
@@ -36,7 +61,7 @@ export const STATUS: Record<string, { label: string; cls: string }> = {
   SUBMITTED: { label: "Submitted", cls: "bg-slate-100 text-slate-700" },
   ASSIGNED: { label: "Assigned", cls: "bg-blue-100 text-blue-800" },
   IN_PROGRESS: { label: "In progress", cls: "bg-amber-100 text-amber-800" },
-  RESOLVED: { label: "Resolved - please confirm", cls: "bg-emerald-100 text-emerald-800" },
+  RESOLVED: { label: "Resolved", cls: "bg-emerald-100 text-emerald-800" },
   CLOSED: { label: "Closed", cls: "bg-emerald-700 text-white" },
   REOPENED: { label: "Reopened", cls: "bg-orange-100 text-orange-800" },
   REJECTED: { label: "Rejected", cls: "bg-red-100 text-red-800" },
@@ -57,6 +82,49 @@ export const STATUS_COLOR: Record<string, string> = {
 
 export const OPEN_STATUSES: readonly string[] = ["SUBMITTED", "ASSIGNED", "IN_PROGRESS", "REOPENED"];
 export const FIXED_STATUSES: readonly string[] = ["RESOLVED", "CLOSED"];
+
+/** What each history entry means, in plain words. */
+export const EVENT_TEXT: Record<string, string> = {
+  SUBMIT: "Reported",
+  ASSIGN: "Taken by an officer",
+  START: "Work started",
+  RESOLVE: "Marked as fixed",
+  REJECT: "Rejected",
+  DUPLICATE: "Marked as a duplicate",
+  CONFIRM: "Fix confirmed by the citizen",
+  REOPEN: "Reopened by the citizen",
+  AUTO_CLOSE: "Closed automatically",
+};
+
+export const ROLE_TEXT: Record<string, string> = {
+  CITIZEN: "Citizen",
+  OFFICER: "Officer",
+  ADMIN: "Admin",
+  SYSTEM: "NagarFix",
+};
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/** "Overdue by 3 days" / "Due in 2 days" for open reports; null once the report is finished. */
+export function deadlineText(issue: Issue): { text: string; late: boolean } | null {
+  if (!issue.dueAt || !OPEN_STATUSES.includes(issue.status)) return null;
+  const diff = new Date(issue.dueAt).getTime() - Date.now();
+  const days = Math.max(1, Math.round(Math.abs(diff) / DAY));
+  const unit = days === 1 ? "day" : "days";
+  return issue.overdue || diff < 0
+    ? { text: `Overdue by ${days} ${unit}`, late: true }
+    : { text: `Due in ${days} ${unit}`, late: false };
+}
+
+/** "3 days ago", "5 hours ago" */
+export function timeAgo(iso: string): string {
+  const minutes = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutes < 60) return minutes <= 1 ? "just now" : `${minutes} minutes ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+  const days = Math.round(hours / 24);
+  return days === 1 ? "1 day ago" : `${days} days ago`;
+}
 
 /** Adds a Cloudinary transformation, e.g. "c_fill,w_160,h_120" for a thumbnail. */
 export function cloudinaryUrl(url: string, transform: string): string {

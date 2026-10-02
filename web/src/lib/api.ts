@@ -29,7 +29,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   const res = await fetch(`${API_URL}${path}`, { ...init, headers });
   if (!res.ok) {
-    let message = `Request failed (${res.status})`;
+    let message = "";
     try {
       const body = await res.json();
       if (body && typeof body.message === "string") message = body.message;
@@ -37,7 +37,9 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       // no JSON body
     }
     if (res.status === 401 && token) setToken(null);
-    if (res.status === 403) message = "You do not have permission to do that.";
+    if (!message) {
+      message = res.status === 403 ? "You do not have permission to do that." : `Request failed (${res.status})`;
+    }
     throw new ApiError(res.status, message);
   }
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);

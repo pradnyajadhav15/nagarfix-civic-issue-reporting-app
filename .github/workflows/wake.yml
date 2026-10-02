@@ -1,0 +1,28 @@
+# Render's free server sleeps when nobody uses it. This wakes it once a day, so its background jobs
+# (closing reports that stayed "Resolved" for 7 days, rebuilding the demo data) still run.
+name: Daily wake-up
+
+on:
+  schedule:
+    - cron: "40 21 * * *"   # every day at 03:10 India time
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  wake:
+    name: Wake the API
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Call the API until it answers (a sleeping server takes about a minute)
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 20 https://nagarfix-api.onrender.com/actuator/health; then
+              echo
+              echo "The API is awake; its jobs run 30 seconds after it starts."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::warning::The API did not answer within 5 minutes"

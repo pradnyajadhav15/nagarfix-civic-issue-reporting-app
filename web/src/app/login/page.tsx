@@ -3,10 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAuth } from "@/components/AuthProvider";
+import { useAuth, type Role } from "@/components/AuthProvider";
 
 const inputCls =
   "w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none";
+
+const DEMOS: { role: Role; label: string; hint: string; goTo: string }[] = [
+  { role: "CITIZEN", label: "Citizen", hint: "Report issues and confirm fixes", goTo: "/my-reports" },
+  { role: "OFFICER", label: "Ward officer", hint: "Handle zone Z13's reports", goTo: "/officer" },
+  { role: "ADMIN", label: "Admin", hint: "Look around (read-only)", goTo: "/account" },
+];
 
 function nextPath(): string {
   const next = new URLSearchParams(window.location.search).get("next");
@@ -14,7 +20,7 @@ function nextPath(): string {
 }
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginDemo } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,9 +41,22 @@ export default function LoginPage() {
     }
   }
 
+  async function tryDemo(role: Role, goTo: string) {
+    setError("");
+    setBusy(true);
+    try {
+      await loginDemo(role);
+      router.push(goTo);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not open the demo account");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <main className="mx-auto max-w-sm px-6 py-16">
-      <h1 className="mb-6 text-2xl font-bold">Log in</h1>
+    <main className="mx-auto max-w-md space-y-6 px-6 py-16">
+      <h1 className="text-2xl font-bold">Log in</h1>
       <form onSubmit={onSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-5">
         <label className="block space-y-1 text-sm">
           <span>Email</span>
@@ -61,6 +80,27 @@ export default function LoginPage() {
           </Link>
         </p>
       </form>
+
+      <section id="demo" className="space-y-3 rounded-lg border border-violet-200 bg-violet-50 p-5">
+        <h2 className="font-semibold text-violet-900">Or try a demo account</h2>
+        <p className="text-sm text-violet-900">
+          No sign-up needed. Demo accounts only see and change demo reports, and the demo data resets every day.
+        </p>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {DEMOS.map((d) => (
+            <button
+              key={d.role}
+              type="button"
+              disabled={busy}
+              onClick={() => tryDemo(d.role, d.goTo)}
+              className="rounded border border-violet-300 bg-white px-3 py-2 text-left hover:bg-violet-100 disabled:opacity-60"
+            >
+              <span className="block text-sm font-semibold text-violet-900">{d.label}</span>
+              <span className="block text-xs text-violet-700">{d.hint}</span>
+            </button>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

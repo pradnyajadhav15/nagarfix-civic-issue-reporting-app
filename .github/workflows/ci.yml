@@ -18,7 +18,7 @@ permissions:
 jobs:
   api:
     name: API (Spring Boot + PostGIS)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     services:
       postgis:
@@ -79,7 +79,7 @@ jobs:
 
   web:
     name: Web (Next.js)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
@@ -106,7 +106,7 @@ jobs:
 
   ml:
     name: ML service (FastAPI)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     defaults:
       run:

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Illustration of a pothole (demo photo)">
+<rect width="800" height="500" fill="#cbd5e1"/>
+<rect y="140" width="800" height="360" fill="#475569"/>
+<g fill="#f8fafc"><rect x="40" y="300" width="110" height="14" rx="4"/><rect x="250" y="300" width="110" height="14" rx="4"/><rect x="620" y="300" width="110" height="14" rx="4"/></g>
+<ellipse cx="470" cy="360" rx="150" ry="62" fill="#1e293b"/>
+<ellipse cx="478" cy="368" rx="112" ry="40" fill="#0f172a"/>
+<ellipse cx="500" cy="372" rx="58" ry="14" fill="#38bdf8" opacity="0.35"/>
+<g stroke="#1e293b" stroke-width="5" fill="none" stroke-linecap="round"><path d="M320 340 l-40 -18 l-30 10"/><path d="M610 330 l40 -22 l38 6"/><path d="M450 300 l-8 -36"/><path d="M560 410 l30 30"/></g>
+<g><rect x="24" y="24" width="168" height="40" rx="20" fill="#0f172a" opacity="0.78"/><text x="108" y="50" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="700" fill="#ffffff" text-anchor="middle" letter-spacing="2">DEMO PHOTO</text></g>
+</svg>
