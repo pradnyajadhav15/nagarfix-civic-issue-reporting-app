@@ -1,0 +1,41 @@
+# OS / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+.vercel/
+npm-debug.log*
+
+# Java / Maven
+target/
+*.class
+HELP.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Large data & model files stay out of git
+analysis/data/raw/
+analysis/data/interim/
+ml/models/*.pt
+ml/models/*.pth
+*.zip
