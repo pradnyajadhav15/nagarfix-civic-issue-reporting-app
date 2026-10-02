@@ -28,6 +28,9 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/hello", "/api/db", "/api/wards", "/api/wards/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        // "mine" needs login - must come before the public issue rule below
+                        .requestMatchers(HttpMethod.GET, "/api/issues/mine").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/issues", "/api/issues/*").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
