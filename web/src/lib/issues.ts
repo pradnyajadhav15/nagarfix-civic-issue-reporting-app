@@ -43,6 +43,21 @@ export const STATUS: Record<string, { label: string; cls: string }> = {
   DUPLICATE: { label: "Duplicate", cls: "bg-slate-200 text-slate-700" },
 };
 
+/** Marker colours on the map. */
+export const STATUS_COLOR: Record<string, string> = {
+  SUBMITTED: "#64748b",
+  ASSIGNED: "#2563eb",
+  IN_PROGRESS: "#d97706",
+  RESOLVED: "#10b981",
+  CLOSED: "#047857",
+  REOPENED: "#ea580c",
+  REJECTED: "#dc2626",
+  DUPLICATE: "#94a3b8",
+};
+
+export const OPEN_STATUSES: readonly string[] = ["SUBMITTED", "ASSIGNED", "IN_PROGRESS", "REOPENED"];
+export const FIXED_STATUSES: readonly string[] = ["RESOLVED", "CLOSED"];
+
 /** Adds a Cloudinary transformation, e.g. "c_fill,w_160,h_120" for a thumbnail. */
 export function cloudinaryUrl(url: string, transform: string): string {
   return url.includes("/image/upload/") ? url.replace("/image/upload/", `/image/upload/${transform}/`) : url;

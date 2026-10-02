@@ -1,6 +1,8 @@
 package dev.nagarfix.api.issue;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -79,6 +81,41 @@ public class IssueService {
 
     public List<IssueView> mine(long reporterId) {
         return jdbc.query(SELECT + " WHERE i.reporter_id = ? ORDER BY i.created_at DESC", MAPPER, reporterId);
+    }
+
+    /**
+     * Public list for the map, newest first. All filters are optional.
+     * bbox = {minLng, minLat, maxLng, maxLat}; "&&" uses the spatial (GIST) index.
+     */
+    public List<IssueView> search(List<String> statuses, List<String> categories, String wardCode,
+                                  double[] bbox, int limit) {
+        StringBuilder where = new StringBuilder(" WHERE 1 = 1");
+        List<Object> args = new ArrayList<>();
+        if (!statuses.isEmpty()) {
+            where.append(" AND i.status IN (").append(placeholders(statuses.size())).append(')');
+            args.addAll(statuses);
+        }
+        if (!categories.isEmpty()) {
+            where.append(" AND i.category IN (").append(placeholders(categories.size())).append(')');
+            args.addAll(categories);
+        }
+        if (wardCode != null && !wardCode.isBlank()) {
+            where.append(" AND i.ward_code = ?");
+            args.add(wardCode.trim());
+        }
+        if (bbox != null) {
+            where.append(" AND i.location && ST_MakeEnvelope(?, ?, ?, ?, 4326)");
+            args.add(bbox[0]);
+            args.add(bbox[1]);
+            args.add(bbox[2]);
+            args.add(bbox[3]);
+        }
+        args.add(limit);
+        return jdbc.query(SELECT + where + " ORDER BY i.created_at DESC LIMIT ?", MAPPER, args.toArray());
+    }
+
+    private static String placeholders(int count) {
+        return String.join(", ", Collections.nCopies(count, "?"));
     }
 
     private static String blankToNull(String s) {

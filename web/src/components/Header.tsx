@@ -15,6 +15,9 @@ export default function Header() {
           <Link href="/" className="text-base font-bold text-emerald-700">
             NagarFix
           </Link>
+          <Link href="/map" className="text-slate-600 hover:text-slate-900">
+            Map
+          </Link>
           <Link href="/wards" className="text-slate-600 hover:text-slate-900">
             Zones
           </Link>

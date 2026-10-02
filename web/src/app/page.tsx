@@ -17,10 +17,16 @@ export default function Home() {
           Report an issue &rarr;
         </Link>
         <Link
+          href="/map"
+          className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold hover:bg-slate-50"
+        >
+          See all reports
+        </Link>
+        <Link
           href="/wards"
           className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold hover:bg-slate-50"
         >
-          View zone map
+          Zone map
         </Link>
       </div>
       <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
@@ -28,7 +34,7 @@ export default function Home() {
         government body. Reports are not forwarded to any authority.
       </p>
       <ServiceStatus />
-      <p className="text-sm text-slate-500">Status: Phase 1 - reporting is live.</p>
+      <p className="text-sm text-slate-500">Status: Phase 1 - reporting and public map are live.</p>
     </main>
   );
 }
