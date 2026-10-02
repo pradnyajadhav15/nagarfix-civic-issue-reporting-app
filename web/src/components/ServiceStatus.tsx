@@ -79,6 +79,7 @@ export default function ServiceStatus() {
       <h2 className="mb-2 text-sm font-semibold text-slate-700">System status</h2>
       <ul className="space-y-1 text-sm">
         <StatusRow label="API (Spring Boot)" url={`${API_URL}/api/hello`} />
+        <StatusRow label="Database (Neon + PostGIS)" url={`${API_URL}/api/db`} />
         <StatusRow label="AI service (FastAPI)" url={`${ML_URL}/health`} />
       </ul>
       <p className="mt-2 text-xs text-slate-500">
