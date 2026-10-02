@@ -1,0 +1,28 @@
+# Render Blueprint: NagarFix backends on the FREE plan, Singapore region.
+# plan: free must stay explicit - without it Render picks a paid plan.
+services:
+  - type: web
+    name: nagarfix-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - api/**
+
+  - type: web
+    name: nagarfix-ml
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./ml/Dockerfile
+    dockerContext: ./ml
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    buildFilter:
+      paths:
+        - ml/**

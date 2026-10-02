@@ -1,3 +1,5 @@
+import ServiceStatus from "@/components/ServiceStatus";
+
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col justify-center gap-6 px-6 py-16">
@@ -12,7 +14,8 @@ export default function Home() {
         Independent student project. Not affiliated with Solapur Municipal Corporation or any
         government body. Reports are not forwarded to any authority.
       </p>
-      <p className="text-sm text-slate-500">Status: Phase 0 - setting up.</p>
+      <ServiceStatus />
+      <p className="text-sm text-slate-500">Status: Phase 0 - first deploy.</p>
     </main>
   );
 }
