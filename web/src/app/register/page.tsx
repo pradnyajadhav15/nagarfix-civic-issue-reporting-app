@@ -8,6 +8,11 @@ import { useAuth } from "@/components/AuthProvider";
 const inputCls =
   "w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none";
 
+function nextPath(): string {
+  const next = new URLSearchParams(window.location.search).get("next");
+  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/account";
+}
+
 export default function RegisterPage() {
   const { register } = useAuth();
   const router = useRouter();
@@ -23,7 +28,7 @@ export default function RegisterPage() {
     setBusy(true);
     try {
       await register(fullName, email, password);
-      router.push("/account");
+      router.push(nextPath());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign up failed");
     } finally {
