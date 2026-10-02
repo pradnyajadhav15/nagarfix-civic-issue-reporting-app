@@ -60,14 +60,22 @@ jobs:
       - name: Build and test
         run: ./mvnw -B -ntp verify
 
-      # TEMP (review branch only): keep the built app so it can be tried end to end
-      - name: Keep the built app
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v7
-        with:
-          name: api-jar
-          path: api/target/api-0.0.1-SNAPSHOT.jar
-          retention-days: 1
+      - name: Test summary
+        if: always()
+        shell: python3 {0}
+        run: |
+          # One line per test class (shown on the run's page), plus the reason for each failed test
+          import glob, xml.etree.ElementTree as ET
+          for path in sorted(glob.glob("target/surefire-reports/TEST-*.xml")):
+              suite = ET.parse(path).getroot()
+              name = suite.get("name").rsplit(".", 1)[-1]
+              tests, skipped = int(suite.get("tests")), int(suite.get("skipped"))
+              failed = int(suite.get("failures")) + int(suite.get("errors"))
+              print(f"::notice title={name}::{tests} tests, {failed} failed, {skipped} skipped")
+              for case in suite.iter("testcase"):
+                  for problem in list(case.iter("failure")) + list(case.iter("error")):
+                      message = (problem.get("message") or problem.text or "").replace("\n", " ")[:400]
+                      print(f"::error title={name}.{case.get('name')}::{message}")
 
   web:
     name: Web (Next.js)
