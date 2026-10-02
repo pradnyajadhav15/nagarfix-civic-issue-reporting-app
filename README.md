@@ -20,8 +20,8 @@ Pilot city: Solapur, Maharashtra.
 
 | Layer | Tech | Free hosting |
 |-------|------|--------------|
-| Web   | Next.js | Vercel |
-| API   | Spring Boot, PostgreSQL + PostGIS | Render, Neon |
+| Web   | Next.js 16 | Vercel |
+| API   | Spring Boot 4 (Java 25), PostgreSQL + PostGIS | Render, Neon |
 | ML/AI | Python, FastAPI | Render, Hugging Face ZeroGPU |
 
 ## Repository layout
@@ -32,9 +32,17 @@ Pilot city: Solapur, Maharashtra.
 - `analysis/` - data analysis and model-training notebooks
 - `docs/` - architecture notes and decisions
 
+## Run locally (Windows PowerShell)
+
+| App | Command (from repo root) | Open |
+|-----|--------------------------|------|
+| API | `cd api; .\mvnw.cmd spring-boot:run` | http://localhost:8080/api/hello |
+| ML  | `cd ml; .\.venv\Scripts\python -m uvicorn app.main:app --reload` | http://localhost:8000/docs |
+| Web | `cd web; npm run dev` | http://localhost:3000 |
+
 ## Status
 
-Phase 0 - foundations.
+Phase 0 - foundations: apps scaffolded.
 
 ## License
 
