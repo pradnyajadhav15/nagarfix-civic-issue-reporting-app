@@ -1,3 +1,4 @@
+import Link from "next/link";
 import ServiceStatus from "@/components/ServiceStatus";
 
 export default function Home() {
@@ -14,8 +15,14 @@ export default function Home() {
         Independent student project. Not affiliated with Solapur Municipal Corporation or any
         government body. Reports are not forwarded to any authority.
       </p>
+      <Link
+        href="/wards"
+        className="w-fit rounded-lg bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
+      >
+        View zone map &rarr;
+      </Link>
       <ServiceStatus />
-      <p className="text-sm text-slate-500">Status: Phase 0 - first deploy.</p>
+      <p className="text-sm text-slate-500">Status: Phase 1 - zones and map.</p>
     </main>
   );
 }
