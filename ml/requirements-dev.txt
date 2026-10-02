@@ -1,0 +1,4 @@
+# Extra packages for running the tests (not needed in production)
+-r requirements.txt
+pytest>=8
+httpx2>=2

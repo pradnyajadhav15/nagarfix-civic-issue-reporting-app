@@ -1,5 +1,6 @@
 # Render Blueprint: NagarFix backends on the FREE plan, Singapore region.
 # plan: free must stay explicit - without it Render picks a paid plan.
+# Test-only changes do not trigger a redeploy (ignoredPaths); GitHub Actions runs those tests.
 services:
   - type: web
     name: nagarfix-api
@@ -13,6 +14,8 @@ services:
     buildFilter:
       paths:
         - api/**
+      ignoredPaths:
+        - api/src/test/**
 
   - type: web
     name: nagarfix-ml
@@ -26,3 +29,7 @@ services:
     buildFilter:
       paths:
         - ml/**
+      ignoredPaths:
+        - ml/tests/**
+        - ml/pytest.ini
+        - ml/requirements-dev.txt

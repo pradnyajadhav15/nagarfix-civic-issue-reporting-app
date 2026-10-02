@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import ReportMapLoader from "@/components/ReportMapLoader";
 import StatusBadge from "@/components/StatusBadge";
@@ -13,11 +13,7 @@ export default function IssuePage() {
   const id = params?.id;
   const [issue, setIssue] = useState<Issue | null>(null);
   const [error, setError] = useState("");
-  const [isNew, setIsNew] = useState(false);
-
-  useEffect(() => {
-    setIsNew(new URLSearchParams(window.location.search).has("new"));
-  }, []);
+  const isNew = useSearchParams().has("new");
 
   useEffect(() => {
     if (!id) return;

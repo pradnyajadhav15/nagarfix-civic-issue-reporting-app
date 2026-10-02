@@ -29,11 +29,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    if (!getToken()) {
-      setLoading(false);
-      return;
-    }
-    api<User>("/api/me")
+    // With a saved token, ask the API who we are; without one, there is nothing to check.
+    const check: Promise<User | null> = getToken() ? api<User>("/api/me") : Promise.resolve(null);
+    check
       .then((u) => {
         if (active) setUser(u);
       })
